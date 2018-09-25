@@ -1,0 +1,235 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "stack.h"
+
+#if 0
+#define dbg(...) printf(__VA_ARGS__)
+#else 
+#define dbg(...) 
+#endif
+typedef struct node{
+    int data;
+    struct node *l;
+    struct node *r;
+    struct node *p;
+};
+
+int free_tree(struct node *n) {
+    if (n != NULL) {
+        if (n == n->p->l) {
+            n->p->l = NULL;
+        } else {
+            n->p->r = NULL;
+        }
+        free_tree(n->l);
+        free_tree(n->r);
+        free(n);
+    }
+    return 0;
+}
+
+struct node *root = NULL;
+int input_tree_from_file() {
+    struct node *nodes[10240] = {0};
+    char buf[1024] = {0};
+    FILE *fp = fopen("t.gen", "r");
+    int n = 0;
+    int nth = 0;
+    int i=0;
+
+    memset(nodes, 0, sizeof(nodes));
+    if (fp == NULL) {
+        return -1;
+    }
+    while (fgets(buf, sizeof(buf), fp) != NULL) {
+        char *sep = " ";
+        char *word;
+        char *brk;
+        n = strlen(buf);
+        dbg("%s", buf);
+        if (buf[n-1] == '\n') 
+            buf[n-1] = 0;
+        dbg("%s\n", buf);
+        for (word=strtok_r(buf, sep, &brk); word; word=strtok_r(NULL, sep, &brk)) {
+            dbg("word:%s\n", word?word:"NULL");
+            struct node *now = NULL;
+            int v = 0;
+            if (strcmp(word, "N") != 0) {
+                v = atoi(word);
+                now = (struct node *)malloc(sizeof(struct node));
+                now->l = NULL;
+                now->r = NULL;
+                now->data = v;
+            }
+#if 0
+            if (nth == 7) {
+                int ii;
+                for (ii=0; ii<7; ii++) 
+                    printf("%p\n", nodes[ii]);
+            }
+#endif
+            if ((nth != 0) && (nodes[(nth-1)/2] != NULL)) { //not first node, parent node not null
+                if ((nth%2) == 1) {
+                    nodes[(nth-1)/2]->l = now;
+                } else {
+                    nodes[(nth-1)/2]->r = now;
+                } 
+            }
+            nodes[nth] = now;
+            nth++;
+        }
+        dbg("______\n");
+    }
+    
+    if (root != NULL) {
+        free_tree(root);
+        root = NULL;
+    }
+    
+    root = nodes[0];
+#if 1
+    printf("natual seq:\n");
+    for (i=0; i<100; i++) {
+        struct node *p = nodes[i];
+        if (p != NULL) 
+            printf("%d\t", p->data);
+    }
+#endif
+    return 0;
+}
+
+int pre_travel(struct node *r) 
+{
+    if (r != NULL) {
+        printf("%d\t", r->data);
+        pre_travel(r->l);
+        pre_travel(r->r);
+    }
+    return 0;
+}
+int post_travel(struct node *r) 
+{
+    if (r != NULL) {
+        post_travel(r->l);
+        post_travel(r->r);
+        printf("%d\t", r->data);
+    }
+    return 0;
+}
+int mid_travel(struct node *r) 
+{
+    if (r != NULL) {
+        mid_travel(r->l);
+        printf("%d\t", r->data);
+        mid_travel(r->r);
+    }
+    return 0;
+}
+
+int pre_travel_s(struct node *r)
+{
+    struct node *n = r;
+    struct stack *s = stack_init();
+    struct node *tmp = NULL;
+
+    while (n != NULL || !stack_empty(s)) {
+        while (n != NULL) {
+            printf("%d\t", n->data);
+            stack_push(s, n);
+            n = n->l;
+        }
+
+        tmp = stack_pop(s);
+        if (tmp != NULL) {
+            if (tmp->r != NULL) 
+                n = tmp->r;
+        }
+    }
+
+    return 0;
+}
+
+
+int mid_travel_s(struct node *r)
+{
+    struct node *n = r;
+    struct stack *s = stack_init();
+    struct node *tmp = NULL;
+
+    while (n != NULL || !stack_empty(s)) {
+        while (n != NULL) {
+            stack_push(s, n);
+            n = n->l;
+        }
+
+        tmp = stack_pop(s);
+        if (tmp != NULL) {
+            printf("%d\t", tmp->data);
+            if (tmp->r != NULL) 
+                n = tmp->r;
+        }
+    }
+
+    return 0;
+}
+
+int post_travel_s(struct node *r)
+{
+    struct node *n = r;
+    struct stack *s = stack_init();
+    struct node *tmp = NULL;
+    struct node *last_pop = NULL;
+
+    while (n != NULL || !stack_empty(s)) {
+        while (n != NULL) {
+            stack_push(s, n);
+            n = n->l;
+        }
+
+        tmp = stack_pop(s);
+        if (tmp != NULL) {
+            if (tmp->r != NULL) {
+                if (tmp->r != last_pop) {
+                    n = tmp->r;
+                    stack_push(s, tmp);
+                } else {
+                    printf("%d\t", tmp->data);
+                }
+            } else 
+                printf("%d\t", tmp->data);
+            last_pop = tmp;
+        }
+    }
+
+    return 0;
+}
+
+int main()
+{
+    int i=0;
+    input_tree_from_file();
+    dbg("xxxx");
+
+    printf("root:%d\n", root->data);
+    printf("\npre order:\n");
+    pre_travel(root);
+
+    printf("\nmid order:\n");
+    mid_travel(root);
+
+    printf("\npost order:\n");
+    post_travel(root);
+
+    printf("\npre_s order:\n");
+    pre_travel_s(root);
+
+    printf("\nmid_s order:\n");
+    mid_travel_s(root);
+
+    printf("\npost_s order:\n");
+    post_travel_s(root);
+
+    printf("\n");
+    return 0;
+}
