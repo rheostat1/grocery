@@ -63,6 +63,7 @@ int input_tree_from_file() {
                 now->l = NULL;
                 now->r = NULL;
                 now->data = v;
+                now->p = NULL;
             }
 #if 0
             if (nth == 7) {
@@ -78,6 +79,8 @@ int input_tree_from_file() {
                     nodes[(nth-1)/2]->r = now;
                 } 
             }
+            if (now != NULL)
+                now->p = nodes[(nth-1)/2];
             nodes[nth] = now;
             nth++;
         }
@@ -212,20 +215,96 @@ int layer_travel_q(struct node *r)
     struct queue *q = queue_init();
     struct queue_node *n = new_queue_node(r);
     enqueue(q, n);
+    int cur_layer_num = 1;
     while (!is_queue_empty(q)) {
-        struct queue_node *tmp = dequeue(q);
-        struct node *tmp_tree_node = (struct node *)(tmp->data);
-        printf("%d\t", tmp_tree_node->data);
-        if (tmp_tree_node->l != NULL) {
-            struct queue_node *qn = new_queue_node(tmp_tree_node->l);
-            enqueue(q, qn);
+        cur_layer_num = q->sz;
+        while(cur_layer_num--) {
+            struct queue_node *tmp = dequeue(q);
+            struct node *tmp_tree_node = (struct node *)(tmp->data);
+            printf("%d\t", tmp_tree_node->data);
+            if (tmp_tree_node->l != NULL) {
+                struct queue_node *qn = new_queue_node(tmp_tree_node->l);
+                enqueue(q, qn);
+            }
+            if (tmp_tree_node->r != NULL) {
+                struct queue_node *qn = new_queue_node(tmp_tree_node->r);
+                enqueue(q, qn);
+            } 
         }
-        if (tmp_tree_node->r != NULL) {
-            struct queue_node *qn = new_queue_node(tmp_tree_node->r);
-            enqueue(q, qn);
-        } 
+        printf("\n");
     }
     return 0;
+}
+
+
+struct node * insert_to_tree(struct node *root, int val)
+{
+    struct node *n = NULL;
+    n = (struct node *)malloc(sizeof(struct node));
+    n->l = NULL;
+    n->r = NULL;
+    n->p = NULL;
+    n->data = val;
+ 
+    if (root == NULL) 
+        return n;
+    else {
+        struct node *p = root;
+        struct node *pre = NULL;
+        int left = 0;
+        while (p != NULL) {
+            if (val < p->data) {
+                pre = p;
+                p = p->l;
+                left = 1;
+            } else {
+                pre = p;
+                p = p->r;
+                left = 0;
+            }
+        }
+        if (pre != NULL) {
+            if (left) {
+                pre->l = n;
+            } else {
+                pre->r = n;
+            }
+            n->p = pre;
+        }
+        return root;
+    }
+}
+
+struct node * scan_create_tree()
+{
+    struct node * root = NULL;
+    char buf[1024];
+    int n=0;
+    char *sep = " ";
+    char *word;
+    char *brk;
+    while (fgets(buf, sizeof(buf), stdin) != NULL) {
+        if (buf[0] == 'Q')
+            break;
+        n = strlen(buf);
+        dbg("%s", buf);
+        if (buf[n-1] == '\n') 
+            buf[n-1] = 0;
+        dbg("%s\n", buf);
+        for (word=strtok_r(buf, sep, &brk); word; word=strtok_r(NULL, sep, &brk)) {
+            dbg("word:%s\n", word?word:"NULL");
+            struct node *now = NULL;
+            int v = 0;
+            v = atoi(word);
+            root = insert_to_tree(root, v);
+        }
+#if 1
+        printf("----------------------\n");
+        layer_travel_q(root);
+        printf("----------------------\n");
+#endif
+    }
+    return root;
 }
 
 
@@ -258,6 +337,12 @@ int main()
 
     printf("--------------------------------------\n");
 
+    printf("Layer to layer travel:\n");
     layer_travel_q(root);
+    printf("\n");
+
+    printf("--------------------------------------\n");
+    scan_create_tree();
+    
     return 0;
 }
