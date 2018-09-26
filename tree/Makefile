@@ -4,7 +4,7 @@ stack_test:
 	gcc stack.c stack_test.c -o st
 
 tree:
-	gcc node.c stack.c -o t
+	gcc queue.c stack.c node.c -o t
 
 .PHONEY: clean
 

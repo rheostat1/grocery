@@ -1,3 +1,5 @@
+
+#include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +15,7 @@ typedef struct node{
     struct node *l;
     struct node *r;
     struct node *p;
-};
+} _node;
 
 int free_tree(struct node *n) {
     if (n != NULL) {
@@ -205,6 +207,28 @@ int post_travel_s(struct node *r)
     return 0;
 }
 
+int layer_travel_q(struct node *r)
+{
+    struct queue *q = queue_init();
+    struct queue_node *n = new_queue_node(r);
+    enqueue(q, n);
+    while (!is_queue_empty(q)) {
+        struct queue_node *tmp = dequeue(q);
+        struct node *tmp_tree_node = (struct node *)(tmp->data);
+        printf("%d\t", tmp_tree_node->data);
+        if (tmp_tree_node->l != NULL) {
+            struct queue_node *qn = new_queue_node(tmp_tree_node->l);
+            enqueue(q, qn);
+        }
+        if (tmp_tree_node->r != NULL) {
+            struct queue_node *qn = new_queue_node(tmp_tree_node->r);
+            enqueue(q, qn);
+        } 
+    }
+    return 0;
+}
+
+
 int main()
 {
     int i=0;
@@ -231,5 +255,9 @@ int main()
     post_travel_s(root);
 
     printf("\n");
+
+    printf("--------------------------------------\n");
+
+    layer_travel_q(root);
     return 0;
 }

@@ -8,7 +8,7 @@ struct stack * stack_init() {
 
 int stack_push(struct stack *s, void *d)
 {
-    if (s->top >= (MAXITEM-1)) {
+    if (s->top >= (MAXSITEM-1)) {
         return -1;
     }
     s->d[s->top+1] = d;
