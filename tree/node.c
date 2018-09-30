@@ -275,6 +275,25 @@ struct node * insert_to_tree(struct node *root, int val)
     }
 }
 
+struct node * insert_to_tree_recurs(struct node *node, int val)/*not set parent pointer*/
+{ 
+    if (node == NULL) {
+        struct node *n = NULL;
+        n = (struct node *)malloc(sizeof(struct node));
+        n->l = NULL;
+        n->r = NULL;
+        n->p = NULL;
+        n->data = val;
+        return n;
+    } else {
+        if (val < node->data)
+            node->l = insert_to_tree_recurs(node->l, val);
+        else 
+            node->r = insert_to_tree_recurs(node->r, val);
+    }
+    return node;
+}
+
 struct node * scan_create_tree()
 {
     struct node * root = NULL;
@@ -296,7 +315,7 @@ struct node * scan_create_tree()
             struct node *now = NULL;
             int v = 0;
             v = atoi(word);
-            root = insert_to_tree(root, v);
+            root = insert_to_tree_recurs(root, v);
         }
 #if 1
         printf("----------------------\n");
